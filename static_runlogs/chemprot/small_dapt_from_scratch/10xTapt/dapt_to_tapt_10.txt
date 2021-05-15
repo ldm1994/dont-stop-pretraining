@@ -1,0 +1,32 @@
+Used Should Continue and model found is :  m4m_dsp/chemprot/small_dapt_from_scratch/10xTapt//roberta-dapt-tapt_10/checkpoint-0
+05/13/2021 10:21:53 - WARNING - __main__ -   Process rank: -1, device: cuda, n_gpu: 1, distributed training: False, 16-bits training: False
+file m4m_dsp/chemprot/small_dapt_from_scratch/10xTapt//roberta-dapt-tapt_10/checkpoint-0/config.json not found
+Traceback (most recent call last):
+  File "/home/ec2-user/anaconda3/envs/metaEnv/lib/python3.7/site-packages/transformers/configuration_utils.py", line 420, in get_config_dict
+    use_auth_token=use_auth_token,
+  File "/home/ec2-user/anaconda3/envs/metaEnv/lib/python3.7/site-packages/transformers/file_utils.py", line 1063, in cached_path
+    raise EnvironmentError("file {} not found".format(url_or_filename))
+OSError: file m4m_dsp/chemprot/small_dapt_from_scratch/10xTapt//roberta-dapt-tapt_10/checkpoint-0/config.json not found
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ec2-user/anaconda3/envs/metaEnv/lib/python3.7/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/home/ec2-user/anaconda3/envs/metaEnv/lib/python3.7/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/ec2-user/internship/dsp/scripts/run_language_modeling_endtask.py", line 1120, in <module>
+    main()
+  File "/home/ec2-user/internship/dsp/scripts/run_language_modeling_endtask.py", line 931, in main
+    config = AutoConfig.from_pretrained(args.model_name_or_path, output_hidden_states=True, cache_dir=args.cache_dir)
+  File "/home/ec2-user/anaconda3/envs/metaEnv/lib/python3.7/site-packages/transformers/models/auto/configuration_auto.py", line 360, in from_pretrained
+    config_dict, _ = PretrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
+  File "/home/ec2-user/anaconda3/envs/metaEnv/lib/python3.7/site-packages/transformers/configuration_utils.py", line 432, in get_config_dict
+    raise EnvironmentError(msg)
+OSError: Can't load config for 'm4m_dsp/chemprot/small_dapt_from_scratch/10xTapt//roberta-dapt-tapt_10/checkpoint-0'. Make sure that:
+
+- 'm4m_dsp/chemprot/small_dapt_from_scratch/10xTapt//roberta-dapt-tapt_10/checkpoint-0' is a correct model identifier listed on 'https://huggingface.co/models'
+
+- or 'm4m_dsp/chemprot/small_dapt_from_scratch/10xTapt//roberta-dapt-tapt_10/checkpoint-0' is the correct path to a directory containing a config.json file
+
+
