@@ -439,16 +439,24 @@ def train(
 				# Store the gradients for the meta-learner
 				if args.n_gpu > 1:
 					loss = loss.mean()  # mean() to average on multi-gpu parallel training
+				gradients = None
 				if auxTaskModel.alpha_generator_algo.is_meta:
-					gradients = torch.autograd.grad(loss, model.parameters(), retain_graph=True, allow_unused=True)
-					auxTaskModel.set_mlm_grads(gradients)
+					try:
+						gradients = torch.autograd.grad(loss, model.parameters(), retain_graph=True, allow_unused=True)
+						auxTaskModel.set_mlm_grads(gradients)
+					except RuntimeError as e:
+						pdb.set_trace()
+						if 'out of memory' in str(e):
+							print('| WARNING: ran out of memory during autograd.grad. Skipping Batch')
+						auxTaskModel.set_mlm_grads([])
+						torch.cuda.empty_cache()
+
 				scale = 0 if args.no_mlm_weight else auxTaskModel.alpha_generator_algo["MLM"]
 				loss = loss * scale
 				grad_accum_factor = 1
 				if args.gradient_accumulation_steps > 1:
 					loss = loss / args.gradient_accumulation_steps
 					grad_accum_factor = args.gradient_accumulation_steps
-
 				if args.fp16:
 					with amp.scale_loss(loss, optimizer) as scaled_loss:
 						scaled_loss.backward()
@@ -802,6 +810,8 @@ def main():
 	)
 
 	# Begin Change [ldery]
+	parser.add_argument("--from-scratch", action='store_true', help='Start training from scratch')
+
 	# Weighting Algorithm Specifics
 	parser.add_argument("--alpha_update_algo", type=str, default='default', choices=['default', 'alt', 'warm_up_down', 'phase_in', 'meta'])
 	parser.add_argument("--meta_learn_aux", action='store_true', help='Used to activate a meta-learning algo')
@@ -811,7 +821,7 @@ def main():
 	parser.add_argument('--end-val', type=float, default=1.0, help='Final task weightings')
 	parser.add_argument('--meta-lr-weight', type=float, default=0.01, help='learning rate for meta-learning')
 	parser.add_argument('--dev_batch_sz', type=int, default=128, help='Batch sz for dev-set for meta-learning')
-
+	parser.add_argument("--use-train-as-meta", action='store_true', help='Use train head as meta')
 
 	parser.add_argument("--classf_warmup_frac", type=float, default=0.06)
 	parser.add_argument("--classf_betas", type=str, default="(0.9,0.98)")
@@ -943,16 +953,26 @@ def main():
 	else:
 		args.block_size = min(args.block_size, tokenizer.model_max_length)
 
-	if args.model_name_or_path:
+# 	if args.model_name_or_path:
+# 		model = AutoModelWithLMHead.from_pretrained(
+# 			args.model_name_or_path,
+# 			from_tf=bool(".ckpt" in args.model_name_or_path),
+# 			config=config,
+# 			cache_dir=args.cache_dir,
+# 		)
+# 	else:
+# 		logger.info("Training new model from scratch")
+# 		model = AutoModelWithLMHead.from_config(config)
+	if args.from_scratch or (not args.model_name_or_path):
+		logger.info("Training new model from scratch")
+		model = AutoModelWithLMHead.from_config(config)
+	else:
 		model = AutoModelWithLMHead.from_pretrained(
 			args.model_name_or_path,
 			from_tf=bool(".ckpt" in args.model_name_or_path),
 			config=config,
 			cache_dir=args.cache_dir,
 		)
-	else:
-		logger.info("Training new model from scratch")
-		model = AutoModelWithLMHead.from_config(config)
 	model_name = args.model_name_or_path
 	assert model_name, 'The name of the model is not Set. Maybe use roberta-base as the default'
 	os.makedirs(args.output_dir, exist_ok=True)
@@ -969,7 +989,7 @@ def main():
 										dropout=args.classifier_dropout, prim_test_file=args.test_task_file, batch_sz=args.classf_iter_batchsz,
 										prim_dev_file=args.dev_task_file, save_path=os.path.join(args.output_dir, 'modelWAuxTasks.pth'),
 										grad_accum_factor=args.gradient_accumulation_steps, no_mlm_weight=args.no_mlm_weight,
-										dev_batch_sz=args.dev_batch_sz
+										dev_batch_sz=args.dev_batch_sz, use_train_head = args.use_train_as_meta
 									)
 	# Move the model to the appropriate device
 	model.to(args.device)

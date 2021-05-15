@@ -1,25 +1,25 @@
 IMDB = {
-	'imdb': '/home/ldery/internship/dsp/datasets/imdb_data/train.jsonl'
+	'imdb': '/home/ec2-user/internship/dsp/datasets/imdb_data/train.jsonl'
 }
 
 IMDB_SMALL = {
-	'imdb_small': '/home/ldery/internship/dsp/datasets/imdb_data/train.small.jsonl'
+	'imdb_small': '/home/ec2-user/internship/dsp/datasets/imdb_data/train.small.jsonl'
 }
 
 AMAZON = {
-	'amazon': '/home/ldery/internship/dsp/datasets/amazon/train.jsonl'
+	'amazon': '/home/ec2-user/internship/dsp/datasets/amazon/train.jsonl'
 }
 
 CITATION = {
-	'citation_intent': '/home/ldery/internship/dsp/datasets/citation_intent/train.jsonl'
+	'citation_intent': '/home/ec2-user/internship/dsp/datasets/citation_intent/train.jsonl'
 }
 
 CHEMPROT = {
-	'chemprot': '/home/ldery/internship/dsp/datasets/chemprot/train.jsonl'
+	'chemprot': '/home/ec2-user/internship/dsp/datasets/chemprot/train.jsonl'
 }
 
 SCIIE = {
-	'sciie': '/home/ldery/internship/dsp/datasets/sciie/train.jsonl'
+	'sciie': '/home/ec2-user/internship/dsp/datasets/sciie/train.jsonl'
 }
 
 

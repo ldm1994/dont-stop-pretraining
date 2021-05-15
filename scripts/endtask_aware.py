@@ -17,14 +17,14 @@ import nvidia_smi
 import sys
 import os
 import pickle
-PATH="/home/ldery/internship/dsp/dont_stop_pretraining"
+PATH="/home/ec2-user/internship/dsp/dont_stop_pretraining"
 sys.path.insert(1, PATH)
 from models import BasicClassifierWithF1
 from data.dataset_readers.text_classification_json_reader_with_sampling import TextClassificationJsonReaderWithSampling
 from modules.seq2vec_encoders.cls_pooler import CLSPooler
-PATH="/home/ldery/internship/meta4da/algorithms"
-sys.path.insert(1, PATH)
-from utils import *
+# PATH="/home/ldery/internship/meta4da/algorithms"
+# sys.path.insert(1, PATH)
+from .utils import *
 from .alpha_generator import *
 import pdb
 from tqdm import tqdm
@@ -96,6 +96,7 @@ class ModelWithAuxTasks(AutoModelWithLMHead):
 					grad_accum_factor=8,
 					no_mlm_weight=False,
 					dev_batch_sz=128,
+					use_train_head=False,
 	):
 		assert save_path is not None, 'Invalid Save Path Provided for Classifier Head'
 		assert isinstance(base_task_dataset_files, dict), 'Invalid type of base_task_dataset_files. Expected array'
@@ -126,6 +127,7 @@ class ModelWithAuxTasks(AutoModelWithLMHead):
 		self.MLM_grads = None
 		self.using_data_parallel = False
 		self.dev_batch_sz = dev_batch_sz # Batch Size for dev-set
+		self.use_train_head = use_train_head
 
 
 	# Sets up the weighting generator
@@ -431,10 +433,15 @@ class ModelWithAuxTasks(AutoModelWithLMHead):
 		else:
 			# This means that we had to re-use the previous dev-head from past estimation because we couldn't
 			# re-estimate it.
-			print('The dev head should be not be none. Probably because of the oom')
+			if not self.use_train_head:
+				print('The dev head should be not be none. Probably because of the oom')
 		setattr(self, dev_head_name, None)
 
 	def learn_dev_head(self):
+		if self.use_train_head:
+			this_classf = getattr(self, "AuxHead-{}".format(self.primary_task_id), None)
+			return this_classf
+
 		assert hasattr(self, 'options'), 'The options need to be set for training of the dev head'
 		this_classf = getattr(self, "AuxHead-{}-{}".format('dev', self.primary_task_id), None)
 		head_name =  "{}-{}".format('dev', self.primary_task_id)
